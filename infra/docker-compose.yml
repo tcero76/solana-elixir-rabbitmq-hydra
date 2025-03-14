@@ -1,0 +1,132 @@
+version: '3.7'
+services:
+  bd:
+    image: postgres:14
+    container_name: db
+    volumes:
+      - ./volumes/postgres/data:/var/lib/postgresql/data/pgdata
+    ports:
+      - 5432:5432
+    environment:
+     - POSTGRES_PASSWORD=Reaktor6_
+     - POSTGRES_USER=tcero
+     - POSTGRES_DB=hydra
+     - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - hydra-net
+  hydra:
+    image: oryd/hydra:latest
+    container_name: hydra
+    ports:
+      - "4444:4444"
+      - "4445:4445" # Endpoint administrativo
+    command: serve all --dev
+    environment:
+      - DSN=postgres://tcero:Reaktor6_@db:5432/hydra?sslmode=disable
+      - URLS_SELF_ISSUER=http://localhost:${PORT_EXTERNAL}/hydra
+      - URLS_LOGIN=http://localhost:${PORT_EXTERNAL}/bff/login 
+      - URLS_CONSENT=http://localhost:${PORT_EXTERNAL}/bff/consent
+      - SECRETS_SYSTEM=some_secret_key_system
+    networks:
+      - hydra-net
+  bff:
+    build:
+      dockerfile: Dockerfile
+      context: ../bff
+    working_dir: /app
+    container_name: bff
+    stdin_open: true
+    tty: true
+    environment:
+      - PORT=3000
+      - PORT_EXTERNAL=${PORT_EXTERNAL}
+      - HOST_EXTERNAL=${HOST_EXTERNAL}
+      - RedirectURL=/bff/callback
+    ports:
+      - 3000:3000
+    networks:
+      - hydra-net
+    volumes:
+      - ../bff:/app
+  chat:
+    build:
+      dockerfile: Dockerfile
+      context: ../chat
+    container_name: chat
+    tty: true
+    stdin_open: true
+    environment:
+      - RABBITMQ_QUEUE=solana_event_queue
+      - RABBITMQ_HOST=broker
+    ports:
+      - 4000:4000
+    volumes:
+      - ../chat:/app
+    networks:
+      - hydra-net
+  envoy:
+    build:
+      dockerfile: Dockerfile
+      context: envoy
+    container_name: envoy
+    tty: true
+    stdin_open: true
+    environment:
+     - ENVOY_HOST=0.0.0.0
+     - ENVOY_PORT=$PORT_EXTERNAL
+    ports:
+      - $PORT_EXTERNAL:$PORT_EXTERNAL
+    volumes:
+      - ./envoy/envoy.yaml:/tmpl/envoy.yaml
+    networks:
+     - hydra-net
+    depends_on:
+      - chat
+      - bff
+      - front
+  front:
+    image: node:latest
+    container_name: front
+    working_dir: /app
+    entrypoint: npm run dev
+    tty: true
+    stdin_open: true
+    environment:
+      - VITE_API_URL=${HOST_EXTERNAL}
+      - VITE_PORT=${PORT_EXTERNAL}
+    ports:
+     - 5173:5173
+    volumes:
+      - ../front:/app
+    networks:
+     - hydra-net
+  broker:
+    image: rabbitmq:4.0-management
+    container_name: broker
+    tty: true
+    stdin_open: true
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      - hydra-net
+  solana-service:
+    build:
+      dockerfile: Dockerfile
+      context: ../solana-service
+    working_dir: /app/
+    restart: always
+    entrypoint: [ "air"]
+    container_name: solana-service
+    tty: true
+    stdin_open: true
+    environment:
+      - PROGRAMID=6RTFvBwrNy3HNznUaB39B5TMvQGhwbodRUY7JuVVnnch
+      - BROKER=amqp://guest:guest@broker:5672
+    volumes:
+      - ../solana-service:/app
+    networks:
+      - hydra-net
+networks:
+  hydra-net:
+    driver: bridge

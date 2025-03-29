@@ -4,3 +4,5 @@
 **/volumes/**
 **/target/**
 **/deps/**
+__pycache__/
+

@@ -24,7 +24,7 @@ services:
     environment:
       - DSN=postgres://tcero:Reaktor6_@db:5432/hydra?sslmode=disable
       - URLS_SELF_ISSUER=http://localhost:${PORT_EXTERNAL}/hydra
-      - URLS_LOGIN=http://localhost:${PORT_EXTERNAL}/bff/login 
+      - URLS_LOGIN=http://localhost:${PORT_EXTERNAL}/login 
       - URLS_CONSENT=http://localhost:${PORT_EXTERNAL}/bff/consent
       - SECRETS_SYSTEM=some_secret_key_system
     networks:

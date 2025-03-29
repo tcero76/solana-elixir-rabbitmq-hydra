@@ -24,7 +24,6 @@ const (
 var hydraAdminClient *hydra.APIClient
 
 func main() {
-	// Configurar cliente de Hydra
 	cfg := hydra.NewConfiguration()
 	cfg.Servers = hydra.ServerConfigurations{{URL: hydraAdminURL}}
 	hydraAdminClient = hydra.NewAPIClient(cfg)
@@ -32,7 +31,7 @@ func main() {
 	e := echo.New()
 
 	// Ruta para iniciar el login
-	e.GET("/login", handleLogin)
+	e.POST("/login", handleLogin)
 	e.GET("/consent", handleConsent)
 	// Ruta para manejar el callback de Hydra
 	e.GET("/callback", handleCallback)
@@ -42,22 +41,28 @@ func main() {
 	e.Start(":" + os.Getenv("PORT"))
 }
 
+type User struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
 func handleLogin(c echo.Context) error {
 	loginChallenge := c.QueryParam("login_challenge")
 	if loginChallenge == "" {
 		return c.String(http.StatusBadRequest, "No login challenge provided")
 	}
 
-	// Aquí deberías implementar tu lógica de autenticación (p.ej., formulario de login)
-	// Por simplicidad, asumimos que el usuario ya está autenticado
+	var user User
+	if err := c.Bind(&user); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
 	_, _, err := hydraAdminClient.OAuth2API.GetOAuth2LoginRequest(c.Request().Context()).LoginChallenge(loginChallenge).Execute()
 	if err != nil {
 		return err
 	}
 
-	// Aceptar la solicitud de login
 	acceptBody := hydra.AcceptOAuth2LoginRequest{
-		Subject: "test-user", // ID del usuario autenticado
+		Subject: user.User,
 	}
 	resp, _, err := hydraAdminClient.OAuth2API.AcceptOAuth2LoginRequest(c.Request().Context()).
 		LoginChallenge(loginChallenge).

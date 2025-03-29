@@ -5,6 +5,7 @@ import App from './App.tsx'
 import Login from './Login.tsx';
 import Home from './Home'
 import Pago from './Pago'
+import 'bootstrap/dist/css/bootstrap.css'
 
 const router = createBrowserRouter([
   {

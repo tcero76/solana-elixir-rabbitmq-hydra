@@ -48,20 +48,21 @@ services:
       - hydra-net
     volumes:
       - ../bff:/app
-  chat:
+  ws:
     build:
       dockerfile: Dockerfile
-      context: ../chat
-    container_name: chat
+      context: ../ws
+    container_name: ws
     tty: true
     stdin_open: true
+    # entrypoint: tail -f /dev/null
     environment:
       - RABBITMQ_QUEUE=solana_event_queue
       - RABBITMQ_HOST=broker
     ports:
       - 4000:4000
     volumes:
-      - ../chat:/app
+      - ../ws:/app
     networks:
       - hydra-net
   envoy:
@@ -81,7 +82,7 @@ services:
     networks:
      - hydra-net
     depends_on:
-      - chat
+      - ws
       - bff
       - front
   front:
@@ -125,6 +126,27 @@ services:
       - BROKER=amqp://guest:guest@broker:5672
     volumes:
       - ../solana-service:/app
+    networks:
+      - hydra-net
+  scrap:
+    build:
+      dockerfile: Dockerfile
+      context: ../scrap-service
+    working_dir: /app/
+    entrypoint: [ "tail", "-f", "/dev/null"]
+    container_name: scrap
+    tty: true
+    stdin_open: true
+    environment:
+      - DB_PASSWORD=Reaktor6_
+      - DB_USER=tcero
+      - DB_NAME=hydra
+      - DB_HOST=bd
+      - DB_PORT=5432
+    volumes:
+      - ../scrap-service:/app
+    depends_on:
+      - bd
     networks:
       - hydra-net
 networks:

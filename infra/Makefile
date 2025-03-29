@@ -7,7 +7,7 @@ watch:
 	watch docker ps -a
 
 up:
-	docker compose up -d
+	docker compose up -d $(filter-out $@,$(MAKECMDGOALS))
 
 kill:
 	docker rm -f $(filter-out $@,$(MAKECMDGOALS))
@@ -16,7 +16,7 @@ down:
 	docker compose down
 
 build:
-	docker compose build $(filter-out $@,$(MAKECMDGOALS)) --no-cache --progress=plain
+	docker compose build $(filter-out $@,$(MAKECMDGOALS)) --no-cache
 
 exec:
 	docker exec -it $(filter-out $@,$(MAKECMDGOALS)) /bin/bash

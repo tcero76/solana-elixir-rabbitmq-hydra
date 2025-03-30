@@ -68,7 +68,6 @@ func handleLogin(c echo.Context) error {
 		LoginChallenge(loginChallenge).
 		AcceptOAuth2LoginRequest(acceptBody).
 		Execute()
-	// fmt.Printf("LOGIN: La respuesta es: %s \n", resp)
 	if err != nil {
 		return err
 	}
@@ -80,8 +79,6 @@ func handleConsent(c echo.Context) error {
 	if consentChallenge == "" {
 		return c.String(http.StatusBadRequest, "No consent_challenge provided")
 	}
-
-	// Obtener la solicitud de consentimiento
 	_, _, err := hydraAdminClient.OAuth2API.GetOAuth2ConsentRequest(c.Request().Context()).
 		ConsentChallenge(consentChallenge).
 		Execute()
@@ -110,7 +107,6 @@ func handleConsent(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, "Error accepting consent")
 	}
 
-	// fmt.Printf("Consent accepted, redirecting to: %s\n", resp.GetRedirectTo())
 	return c.Redirect(http.StatusFound, resp.GetRedirectTo())
 }
 

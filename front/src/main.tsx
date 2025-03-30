@@ -5,6 +5,7 @@ import App from './App.tsx'
 import Login from './Login.tsx';
 import Home from './Home'
 import Pago from './Pago'
+import Chat from './Chat/Chat'
 import 'bootstrap/dist/css/bootstrap.css'
 
 const router = createBrowserRouter([
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
   {
     path: "/pago",
     Component: Pago
+  },
+  {
+    path: "/chat",
+    Component: Chat
   }
 ]);
 createRoot(document.getElementById('root')!).render(

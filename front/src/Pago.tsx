@@ -84,6 +84,7 @@ const Pago = () => {
   }
   return (
     <>
+      <h1>Pago</h1>
       <label>Wallet Destino: {rec}</label>
       <input value={sol} onChange={e=>onChangeSol(e)}></input>
       <br/>

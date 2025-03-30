@@ -13,6 +13,7 @@ defmodule WsWeb.Channel.ChatChannel do
   def handle_in(_event, {:binary, binary}, socket) do
     message =  WsWeb.Events.Message.decode(binary)
     IO.inspect(message)
+    broadcast!(socket, "message:new", %{user: Map.get(socket.assigns.current_user, "sub"), body: message.text})
     {:noreply, socket}
   end
 end

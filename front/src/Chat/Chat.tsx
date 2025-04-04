@@ -27,7 +27,6 @@ const Chat = () => {
     }, [channel])
     useEffect(() => {
       socket?.connect()
-      console.log("🚀 ~ useEffect ~ socket:", socket)
       setChannel(socket?.channel("room:lobby", {}));
       return () => {
         console.log("Cerrando WebSocket...");
